@@ -10,7 +10,7 @@ const defaultBoard: Board = {
                 {
                     description: '',
                     name: 'first task',
-                    id: uuid(),
+                    id: '1',
                     userAssigned: null
                 },
                 {

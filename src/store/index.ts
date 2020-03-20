@@ -13,6 +13,19 @@ export default new Vuex.Store<BoardState>({
   state: {
     board
   },
+  getters: {
+    getTask(state) {
+      return (id: string) => {
+        for (const column of state.board.columns) {
+          for (const task of column.tasks) {
+            if (task.id == id) {
+              return task;
+            }
+          }
+        }
+      }
+    }
+  },
   mutations: {
   },
   actions: {

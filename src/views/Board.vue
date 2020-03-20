@@ -11,7 +11,12 @@
         <v-card-title>{{ column.name }}</v-card-title>
         <v-divider></v-divider>
         <template v-for="(task, $taskIndex) of column.tasks">
-          <v-list-item @click="noClick" class="py-2" :key="`task-${$taskIndex}`" color="white">
+          <v-list-item
+            @click="goToTask(task)"
+            class="py-2"
+            :key="`task-${$taskIndex}`"
+            color="white"
+          >
             <v-list-item-content>
               <v-list-item-title v-text="task.name"></v-list-item-title>
               <v-list-item-subtitle v-if="task.description" v-text="task.description"></v-list-item-subtitle>
@@ -21,12 +26,17 @@
         </template>
       </v-card>
     </div>
+
+    <v-dialog v-model="isTaskOpen">
+      <router-view />
+    </v-dialog>
   </div>
 </template>
 
-<script>
+<script lang="ts">
 // @ is an alias to /src
 import { Component, Vue } from "vue-property-decorator";
+import { Task } from "@/models/Task";
 
 @Component
 export default class Board extends Vue {
@@ -34,8 +44,17 @@ export default class Board extends Vue {
     return this.$store.state.board;
   }
 
-  noClick() {
-    return;
+  get isTaskOpen() {
+    return this.$route.name == "task";
+  }
+  set isTaskOpen(newValue: boolean) {
+    if (!newValue) {
+      this.$router.push({ name: "board" });
+    }
+  }
+
+  goToTask(task: Task) {
+    this.$router.push({ name: "task", params: { id: task.id } });
   }
 }
 </script>
