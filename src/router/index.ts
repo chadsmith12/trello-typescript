@@ -1,6 +1,6 @@
 import Vue from 'vue'
 import VueRouter from 'vue-router'
-import Board from '../views/Board.vue'
+import BoardView from '../views/Board.vue'
 import Task from '../views/Task.vue'
 
 Vue.use(VueRouter)
@@ -9,7 +9,7 @@ const routes = [
   {
     path: '/',
     name: 'board',
-    component: Board,
+    component: BoardView,
     children: [
       {
         path: 'task/:id',

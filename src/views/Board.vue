@@ -2,28 +2,32 @@
   <div class="ma-3">
     <div class="board-container d-flex align-start">
       <v-card
-        v-for="column of board.columns"
+        v-for="(column, $columnIndex) of board.columns"
         :key="`${column.name}-column`"
         class="mr-4"
         outlined
         min-width="350px"
+        @drop="moveTask($event, column.tasks)"
+        @dragover.prevent
+        @dragenter.prevent
       >
         <v-card-title>{{ column.name }}</v-card-title>
         <v-divider></v-divider>
-        <template v-for="(task, $taskIndex) of column.tasks">
-          <v-list-item
-            @click="goToTask(task)"
-            class="py-2"
-            :key="`task-${$taskIndex}`"
-            color="white"
-          >
+        <div
+          v-for="(task, $taskIndex) of column.tasks"
+          :key="$taskIndex"
+          draggable
+          @dragstart="pickupTask($event, $taskIndex, $columnIndex)"
+        >
+          <v-list-item @click="goToTask(task)" class="py-2" :key="`task-${$taskIndex}`">
             <v-list-item-content>
               <v-list-item-title v-text="task.name"></v-list-item-title>
               <v-list-item-subtitle v-if="task.description" v-text="task.description"></v-list-item-subtitle>
             </v-list-item-content>
           </v-list-item>
+
           <v-divider :key="`divider-${$taskIndex}`"></v-divider>
-        </template>
+        </div>
         <v-list-item>
           <v-text-field label="+ Enter new task" @keyup.enter="createTask($event, column.tasks)"></v-text-field>
         </v-list-item>
@@ -40,10 +44,11 @@
 // @ is an alias to /src
 import { Component, Vue } from "vue-property-decorator";
 import { Task } from "@/models/Task";
+import { Board } from "@/models/Board";
 
 @Component
-export default class Board extends Vue {
-  get board() {
+export default class BoardView extends Vue {
+  get board(): Board {
     return this.$store.state.board;
   }
 
@@ -67,6 +72,32 @@ export default class Board extends Vue {
       name: target.value
     });
     target.value = "";
+  }
+
+  pickupTask(event: DragEvent, taskIndex: number, fromColumnIndex: number) {
+    if (event.dataTransfer != null) {
+      event.dataTransfer.effectAllowed = "move";
+      event.dataTransfer.dropEffect = "move";
+      event.dataTransfer.setData("task-index", taskIndex.toString());
+      event.dataTransfer.setData(
+        "from-column-index",
+        fromColumnIndex.toString()
+      );
+    }
+  }
+
+  moveTask(event: DragEvent, toColumn: Task[]) {
+    const columnData = event.dataTransfer?.getData("from-column-index") || "";
+    const taskData = event.dataTransfer?.getData("task-index") || "";
+    const fromColumnIndex = parseInt(columnData);
+    const fromTaskIndex = parseInt(taskData);
+    const fromTasks = this.board.columns[fromColumnIndex].tasks;
+
+    this.$store.commit("MOVE_TASK", {
+      fromColumn: fromTasks,
+      toColumn: toColumn,
+      taskIndex: fromTaskIndex
+    });
   }
 }
 </script>
