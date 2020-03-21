@@ -24,10 +24,13 @@
           </v-list-item>
           <v-divider :key="`divider-${$taskIndex}`"></v-divider>
         </template>
+        <v-list-item>
+          <v-text-field label="+ Enter new task" @keyup.enter="createTask($event, column.tasks)"></v-text-field>
+        </v-list-item>
       </v-card>
     </div>
 
-    <v-dialog v-model="isTaskOpen">
+    <v-dialog v-model="isTaskOpen" max-width="650px">
       <router-view />
     </v-dialog>
   </div>
@@ -55,6 +58,15 @@ export default class Board extends Vue {
 
   goToTask(task: Task) {
     this.$router.push({ name: "task", params: { id: task.id } });
+  }
+
+  createTask(event: KeyboardEvent, tasks: Task[]) {
+    const target = event.target as HTMLInputElement;
+    this.$store.commit("CREATE_TASK", {
+      tasks,
+      name: target.value
+    });
+    target.value = "";
   }
 }
 </script>

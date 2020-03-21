@@ -2,7 +2,7 @@ import Vue from 'vue'
 import Vuex from 'vuex'
 import defaultBoard from '@/data/default-board'
 import BoardState from '@/store/BoardState';
-import { saveStatePlugin } from "@/utils/utils";
+import { saveStatePlugin, uuid } from "@/utils/utils";
 
 Vue.use(Vuex)
 
@@ -27,6 +27,16 @@ export default new Vuex.Store<BoardState>({
     }
   },
   mutations: {
+    CREATE_TASK(state, { tasks, name }) {
+      tasks.push({
+        name,
+        id: uuid(),
+        description: ''
+      });
+    },
+    UPDATE_TASK(state, { task, key, value }) {
+      task[key] = value;
+    }
   },
   actions: {
   },
