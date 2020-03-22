@@ -20,6 +20,9 @@
           :key="$taskIndex"
           draggable
           @dragstart="pickupTask($event, $taskIndex, $columnIndex)"
+          @dragover.prevent
+          @dragenter.prevent
+          @drop.stop="moveTaskOrColumn($event, column.tasks, $columnIndex, $taskIndex)"
         >
           <v-list-item @click="goToTask(task)" class="py-2" :key="`task-${$taskIndex}`">
             <v-list-item-content>
@@ -80,7 +83,7 @@ export default class BoardView extends Vue {
     if (event.dataTransfer != null) {
       event.dataTransfer.effectAllowed = "move";
       event.dataTransfer.dropEffect = "move";
-      event.dataTransfer.setData("task-index", taskIndex.toString());
+      event.dataTransfer.setData("from-task-index", taskIndex.toString());
       event.dataTransfer.setData(
         "from-column-index",
         fromColumnIndex.toString()
@@ -101,18 +104,25 @@ export default class BoardView extends Vue {
     }
   }
 
-  moveTaskOrColumn(event: DragEvent, toColumn: Task[], toColumnIndex: number) {
+  moveTaskOrColumn(
+    event: DragEvent,
+    toColumn: Task[],
+    toColumnIndex: number,
+    toTaskIndex?: number
+  ) {
     const type = event.dataTransfer?.getData("type") || "";
     if (type === "task") {
-      this.moveTask(event, toColumn);
+      const taskIndex =
+        toTaskIndex !== undefined ? toTaskIndex : toColumn.length;
+      this.moveTask(event, toColumn, taskIndex);
     } else {
       this.moveColumn(event, toColumnIndex);
     }
   }
 
-  moveTask(event: DragEvent, toColumn: Task[]) {
+  moveTask(event: DragEvent, toColumn: Task[], toTaskIndex?: number) {
     const columnData = event.dataTransfer?.getData("from-column-index") || "";
-    const taskData = event.dataTransfer?.getData("task-index") || "";
+    const taskData = event.dataTransfer?.getData("from-task-index") || "";
     const fromColumnIndex = parseInt(columnData);
     const fromTaskIndex = parseInt(taskData);
     const fromTasks = this.board.columns[fromColumnIndex].tasks;
@@ -120,7 +130,8 @@ export default class BoardView extends Vue {
     this.$store.commit("MOVE_TASK", {
       fromColumn: fromTasks,
       toColumn: toColumn,
-      taskIndex: fromTaskIndex
+      fromTaskIndex: fromTaskIndex,
+      toTaskIndex: toTaskIndex
     });
   }
 
