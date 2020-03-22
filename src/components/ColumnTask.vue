@@ -1,47 +1,52 @@
 <template>
-  <v-card
-    class="mr-4"
-    outlined
-    min-width="350px"
+  <div
     draggable
-    @drop="moveTaskOrColumn($event, column.tasks, columnIndex)"
+    @dragstart="pickupTask($event, taskIndex, columnIndex)"
     @dragover.prevent
     @dragenter.prevent
-    @dragstart.self="pickupColumn($event, columnIndex)"
+    @drop.stop="moveTaskOrColumn($event, column.tasks, columnIndex, taskIndex)"
   >
-    <v-card-title>{{ column.name }}</v-card-title>
-    <v-divider></v-divider>
-    <ColumnTask
-      v-for="(task, $taskIndex) of column.tasks"
-      :key="$taskIndex"
-      :task="task"
-      :taskIndex="$taskIndex"
-      :column="column"
-      :columnIndex="columnIndex"
-      :board="board"
-    />
-    <v-list-item>
-      <v-text-field label="+ Enter new task" @keyup.enter="createTask($event, column.tasks)"></v-text-field>
+    <v-list-item @click="goToTask(task)" class="py-2" :key="`task-${taskIndex}`">
+      <v-list-item-content>
+        <v-list-item-title v-text="task.name"></v-list-item-title>
+        <v-list-item-subtitle v-if="task.description" v-text="task.description"></v-list-item-subtitle>
+      </v-list-item-content>
     </v-list-item>
-  </v-card>
+
+    <v-divider :key="`divider-${taskIndex}`"></v-divider>
+  </div>
 </template>
 
 <script lang="ts">
 import { Component, Prop, Vue } from "vue-property-decorator";
+import { Task } from "../models/Task";
 import { Column } from "../models/Column";
-import { Task } from "@/models/Task";
 import { Board } from "../models/Board";
-import ColumnTask from "@/components/ColumnTask.vue";
 
-@Component({
-  components: {
-    ColumnTask
-  }
-})
-export default class BoardColumn extends Vue {
+@Component
+export default class ColumnTask extends Vue {
+  @Prop({ required: true }) task!: Task;
+  @Prop({ required: true }) taskIndex!: number;
   @Prop({ required: true }) column!: Column;
   @Prop({ required: true }) columnIndex!: number;
   @Prop({ required: true }) board!: Board;
+
+  pickupTask(event: DragEvent, taskIndex: number, fromColumnIndex: number) {
+    if (event.dataTransfer != null) {
+      event.dataTransfer.effectAllowed = "move";
+      event.dataTransfer.dropEffect = "move";
+      event.dataTransfer.setData("from-task-index", taskIndex.toString());
+      event.dataTransfer.setData(
+        "from-column-index",
+        fromColumnIndex.toString()
+      );
+      event.dataTransfer.setData("type", "task");
+    }
+  }
+
+  goToTask(task: Task) {
+    this.$router.push({ name: "task", params: { id: task.id } });
+  }
 
   moveTaskOrColumn(
     event: DragEvent,
@@ -82,26 +87,6 @@ export default class BoardColumn extends Vue {
       fromColumnIndex,
       toColumnIndex
     });
-  }
-  pickupColumn(event: DragEvent, fromColumnIndex: number) {
-    if (event.dataTransfer != null) {
-      event.dataTransfer.effectAllowed = "move";
-      event.dataTransfer.dropEffect = "move";
-      event.dataTransfer.setData(
-        "from-column-index",
-        fromColumnIndex.toString()
-      );
-      event.dataTransfer.setData("type", "column");
-    }
-  }
-
-  createTask(event: KeyboardEvent, tasks: Task[]) {
-    const target = event.target as HTMLInputElement;
-    this.$store.commit("CREATE_TASK", {
-      tasks,
-      name: target.value
-    });
-    target.value = "";
   }
 }
 </script>
