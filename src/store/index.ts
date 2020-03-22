@@ -27,19 +27,25 @@ export default new Vuex.Store<BoardState>({
     }
   },
   mutations: {
-    CREATE_TASK(state, { tasks, name }) {
+    CREATE_TASK(_state, { tasks, name }) {
       tasks.push({
         name,
         id: uuid(),
         description: ''
       });
     },
-    UPDATE_TASK(state, { task, key, value }) {
+    UPDATE_TASK(_state, { task, key, value }) {
       task[key] = value;
     },
-    MOVE_TASK(state, { fromColumn, toColumn, taskIndex }) {
+    MOVE_TASK(_state, { fromColumn, toColumn, taskIndex }) {
       const taskToMove = fromColumn.splice(taskIndex, 1)[0];
       toColumn.push(taskToMove)
+    },
+    MOVE_COLUMN(state, { fromColumnIndex, toColumnIndex }) {
+      const columnList = state.board.columns;
+      const columnToMove = columnList.splice(fromColumnIndex, 1)[0];
+
+      columnList.splice(toColumnIndex, 0, columnToMove);
     }
   },
   actions: {

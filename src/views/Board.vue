@@ -7,9 +7,11 @@
         class="mr-4"
         outlined
         min-width="350px"
-        @drop="moveTask($event, column.tasks)"
+        draggable
+        @drop="moveTaskOrColumn($event, column.tasks, $columnIndex)"
         @dragover.prevent
         @dragenter.prevent
+        @dragstart.self="pickupColumn($event, $columnIndex)"
       >
         <v-card-title>{{ column.name }}</v-card-title>
         <v-divider></v-divider>
@@ -83,6 +85,28 @@ export default class BoardView extends Vue {
         "from-column-index",
         fromColumnIndex.toString()
       );
+      event.dataTransfer.setData("type", "task");
+    }
+  }
+
+  pickupColumn(event: DragEvent, fromColumnIndex: number) {
+    if (event.dataTransfer != null) {
+      event.dataTransfer.effectAllowed = "move";
+      event.dataTransfer.dropEffect = "move";
+      event.dataTransfer.setData(
+        "from-column-index",
+        fromColumnIndex.toString()
+      );
+      event.dataTransfer.setData("type", "column");
+    }
+  }
+
+  moveTaskOrColumn(event: DragEvent, toColumn: Task[], toColumnIndex: number) {
+    const type = event.dataTransfer?.getData("type") || "";
+    if (type === "task") {
+      this.moveTask(event, toColumn);
+    } else {
+      this.moveColumn(event, toColumnIndex);
     }
   }
 
@@ -97,6 +121,16 @@ export default class BoardView extends Vue {
       fromColumn: fromTasks,
       toColumn: toColumn,
       taskIndex: fromTaskIndex
+    });
+  }
+
+  moveColumn(event: DragEvent, toColumnIndex: number) {
+    const columnData = event.dataTransfer?.getData("from-column-index") || "";
+    const fromColumnIndex = parseInt(columnData);
+
+    this.$store.commit("MOVE_COLUMN", {
+      fromColumnIndex,
+      toColumnIndex
     });
   }
 }
