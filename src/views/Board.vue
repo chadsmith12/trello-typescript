@@ -37,8 +37,16 @@
           <v-text-field label="+ Enter new task" @keyup.enter="createTask($event, column.tasks)"></v-text-field>
         </v-list-item>
       </v-card>
+      <v-card class="mr-4" outlined min-width="350px">
+        <v-card-title>
+          <v-text-field
+            v-model="newColumnName"
+            label="Enter new Column"
+            @keyup.enter="createColumn"
+          ></v-text-field>
+        </v-card-title>
+      </v-card>
     </div>
-
     <v-dialog v-model="isTaskOpen" max-width="650px">
       <router-view />
     </v-dialog>
@@ -53,6 +61,8 @@ import { Board } from "@/models/Board";
 
 @Component
 export default class BoardView extends Vue {
+  newColumnName = "";
+
   get board(): Board {
     return this.$store.state.board;
   }
@@ -64,6 +74,11 @@ export default class BoardView extends Vue {
     if (!newValue) {
       this.$router.push({ name: "board" });
     }
+  }
+
+  createColumn() {
+    this.$store.commit("CREATE_COLUMN", { name: this.newColumnName });
+    this.newColumnName = "";
   }
 
   goToTask(task: Task) {

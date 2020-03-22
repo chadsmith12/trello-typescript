@@ -34,6 +34,12 @@ export default new Vuex.Store<BoardState>({
         description: ''
       });
     },
+    CREATE_COLUMN(state, { name }) {
+      state.board.columns.push({
+        tasks: [],
+        name: name
+      });
+    },
     UPDATE_TASK(_state, { task, key, value }) {
       task[key] = value;
     },
