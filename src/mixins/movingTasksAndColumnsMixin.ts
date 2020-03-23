@@ -1,7 +1,7 @@
 import { Component, Prop, Vue } from "vue-property-decorator";
 import { Column } from '@/models/Column';
 import { Board } from '@/models/Board';
-import { Task } from '@/models/Task';
+import { TransferDataPayload } from "@/models/TransferDataPayload";
 
 @Component
 export default class MovingClassAndColumnsMixin extends Vue {
@@ -9,44 +9,31 @@ export default class MovingClassAndColumnsMixin extends Vue {
     @Prop({ required: true }) columnIndex!: number;
     @Prop({ required: true }) board!: Board;
 
-    moveTaskOrColumn(
-        event: DragEvent,
-        toColumn: Task[],
-        toColumnIndex: number,
-        toTaskIndex?: number
-    ) {
-        const type = event.dataTransfer?.getData("type") || "";
-        if (type === "task") {
-            const taskIndex =
-                toTaskIndex !== undefined ? toTaskIndex : toColumn.length;
-            this.moveTask(event, toColumn, taskIndex);
+    moveTaskOrColumn(transferData: TransferDataPayload) {
+        if (transferData.type === "task") {
+            this.moveTask(transferData);
         } else {
-            this.moveColumn(event, toColumnIndex);
+            this.moveColumn(transferData);
         }
     }
 
-    moveTask(event: DragEvent, toColumn: Task[], toTaskIndex?: number) {
-        const columnData = event.dataTransfer?.getData("from-column-index") || "";
-        const taskData = event.dataTransfer?.getData("from-task-index") || "";
-        const fromColumnIndex = parseInt(columnData);
-        const fromTaskIndex = parseInt(taskData);
-        const fromTasks = this.board.columns[fromColumnIndex].tasks;
+    moveTask(transferData: TransferDataPayload) {
+        const fromTasks = this.board.columns[transferData.fromColumnIndex].tasks;
+        // eslint-disable-next-line
+        const self = this as any;
 
         this.$store.commit("MOVE_TASK", {
             fromColumn: fromTasks,
-            toColumn: toColumn,
-            fromTaskIndex: fromTaskIndex,
-            toTaskIndex: toTaskIndex
+            toColumn: this.column.tasks,
+            fromTaskIndex: transferData.fromTaskIndex,
+            toTaskIndex: self.taskIndex
         });
     }
 
-    moveColumn(event: DragEvent, toColumnIndex: number) {
-        const columnData = event.dataTransfer?.getData("from-column-index") || "";
-        const fromColumnIndex = parseInt(columnData);
-
+    moveColumn(transferData: TransferDataPayload) {
         this.$store.commit("MOVE_COLUMN", {
-            fromColumnIndex,
-            toColumnIndex
+            fromColumnIndex: transferData.fromColumnIndex,
+            toColumnIndex: this.columnIndex
         });
     }
 }
